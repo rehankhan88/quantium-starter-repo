@@ -6,7 +6,8 @@ def make_figure(df):
                   labels={'Date':'Date', 'Sales':'Sales'})
 
     # add vertical marker for the price increase date
-    vdate = pd.to_datetime('2021-01-15').to_pydatetime()
+    # keep as a pandas Timestamp so Plotly can handle it natively
+    vdate = pd.to_datetime('2021-01-15')
 
     # add a vertical line as a shape (avoids plotly's internal averaging bug)
     fig.add_shape(type='line', x0=vdate, x1=vdate, y0=0, y1=1,

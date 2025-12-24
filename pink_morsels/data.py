@@ -20,8 +20,9 @@ def daily_sales_by_region(df: pd.DataFrame, region: str = 'all') -> pd.DataFrame
     region: one of 'north','east','south','west','all' (case-insensitive)
     """
     if region and region.lower() != 'all':
-        mask = df.get('Region') is not None and df['Region'].str.lower() == region.lower()
-        df = df[mask]
+        if 'Region' in df.columns:
+            mask = df.get('Region') is not None and df['Region'].str.lower() == region.lower()
+            df = df[mask]
 
     daily = df.groupby('Date', as_index=False)['Sales'].sum()
     daily = daily.sort_values('Date')

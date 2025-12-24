@@ -24,7 +24,7 @@ def create_app():
 
         html.Div([
             dcc.RadioItems(
-                id='region-select',
+                id='region-picker',
                 options=[
                     {'label': 'All', 'value': 'all'},
                     {'label': 'North', 'value': 'north'},
@@ -34,17 +34,27 @@ def create_app():
                 ],
                 value='all',
                 inline=True,
-                inputStyle={'margin-right': '6px', 'margin-left': '12px'}
+                inputStyle={'margin-right': '6px', 'margin-left': '12px'},
+                # add a stable hook class so CSS can target this component
+                className='region-radio',
+                # move per-label visual styling into the component props where possible
+                labelStyle={
+                    'background': '#eef4ff',
+                    'padding': '6px 10px',
+                    'borderRadius': '6px',
+                    'marginRight': '8px',
+                    'display': 'inline-block'
+                }
             )
         ], id='controls'),
 
-        dcc.Graph(id='sales-line', figure=fig)
+        dcc.Graph(id='sales-graph', figure=fig)
     ],
         id='main-container',
         style={'width': '90%', 'maxWidth': '1000px', 'margin': 'auto', 'fontFamily': 'Arial'})
 
 
-    @app.callback(Output('sales-line', 'figure'), Input('region-select', 'value'))
+    @app.callback(Output('sales-graph', 'figure'), Input('region-picker', 'value'))
     def update_figure(region_value):
         daily = daily_sales_by_region(df_raw, region_value)
         return make_figure(daily)
