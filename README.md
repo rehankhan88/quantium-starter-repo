@@ -39,16 +39,25 @@ python app.py
 
 The app reads the single processed source of truth at `data/processed/pink_morsels_sales.csv`.
 
+## Running tests
+
+Before running tests locally or in CI, install the package in editable mode so tests import the real package:
+
+```bash
+pip install -e .
+pip install -r requirements.txt
+```
+
+Run the test suite with:
+
+```bash
+pytest -q
+```
+
 ---
 
 ## Task status
 
-- **Tasks 1–4 completed:** data processing, aggregation, Dash visualiser and Task 4 UI/CSS improvements are implemented.
+- **Tasks 1–5 completed:** data processing, aggregation, Dash visualiser, UI/CSS improvements and tests
 - **Dashboard entrypoint:** `app.py` (run with `python app.py`).
 - **Data source:** `data/processed/pink_morsels_sales.csv` (single source of truth).
-
-```bash
-git add README.md pink_morsels/ assets/ app.py
-git commit -m "task4: add region filter and styling; scaffold pink_morsels package"
-git push origin main
-```
