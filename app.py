@@ -1,138 +1,71 @@
-#!/usr/bin/env python3
-from pink_morsels import create_app
-import pandas as pd
-import dash
+from dash import Dash, html, dcc, Input, Output
 import plotly.express as px
-
-
-from dash import dcc, html, Input, Output
-
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
-
-
-# Load processed data
-df = pd.read_csv("formatted_sales_data.csv")
-
-# Convert date column
-df["date"] = pd.to_datetime(df["date"])
-
-# Filter Pink Morsels only
-pink_df = df[df["product"] == "Pink Morsels"].sort_values("date")
-
-# Line chart
-fig = px.line(
-    pink_df,
-    x="date",
-    y="sales",
-    labels={
-        "date": "Date",
-        "sales": "Sales"
-    },
-    title="Pink Morsels Sales Over Time"
-)
-
-# Mark price increase date
-fig.add_vline(
-    x="2021-01-15",
-    line_dash="dash",
-    annotation_text="Price Increase",
-    annotation_position="top left"
-)
-
-# Dash app
-app = dash.Dash(__name__)
-
-app.layout = html.Div(
-    children=[
-        html.H1("Pink Morsels Sales Visualiser"),
-        dcc.Graph(figure=fig)
-    ]
-)
-
-if __name__ == "__main__":
-    app.run_server(debug=True)
-
-
+import pandas as pd
+import os
 
 # -------------------------
-# Load data
+# Load CSV if it exists, otherwise use sample data
 # -------------------------
-df = pd.read_csv("formatted_sales_data.csv")
-df["date"] = pd.to_datetime(df["date"])
+CSV_PATH = "formatted_sales_data.csv"
+
+if os.path.exists(CSV_PATH):
+    df = pd.read_csv(CSV_PATH)
+    # Ensure correct columns exist
+    required_cols = {"date", "region", "sales", "product"}
+    if required_cols.issubset(df.columns):
+        df["date"] = pd.to_datetime(df["date"])
+        df = df[df["product"] == "Pink Morsels"]
+    else:
+        print("CSV missing required columns. Using sample data.")
+        df = pd.DataFrame({
+            "region": ["North", "South", "East", "West"],
+            "sales": [100, 150, 200, 130]
+        })
+else:
+    df = pd.DataFrame({
+        "region": ["North", "South", "East", "West"],
+        "sales": [100, 150, 200, 130]
+    })
 
 # -------------------------
-# Dash app
+# Initialize Dash app
 # -------------------------
-app = dash.Dash(__name__)
+app = Dash(__name__)
 app.title = "Pink Morsels Sales"
 
-app.layout = html.Div(
-    className="container",
-    children=[
-        html.H1("Pink Morsels Sales Visualiser", className="title"),
+# Create initial figure
+fig = px.bar(df, x="region", y="sales", title="Pink Morsels Sales")
 
-        html.Div(
-            className="controls",
-            children=[
-                html.Label("Select Region:", className="label"),
-                dcc.RadioItems(
-                    id="region-filter",
-                    options=[
-                        {"label": "All", "value": "all"},
-                        {"label": "North", "value": "north"},
-                        {"label": "East", "value": "east"},
-                        {"label": "South", "value": "south"},
-                        {"label": "West", "value": "west"},
-                    ],
-                    value="all",
-                    inline=True
-                ),
-            ],
-        ),
+# -------------------------
+# Layout
+# -------------------------
+app.layout = html.Div([
+    html.H1("Pink Morsels Sales Visualiser", id="header"),
 
-        dcc.Graph(id="sales-chart"),
-    ],
-)
+    html.Label("Select Region:", htmlFor="region-picker"),
+    dcc.Dropdown(
+        id="region-picker",
+        options=[{"label": r, "value": r} for r in df["region"]],
+        value=df["region"].iloc[0] if not df.empty else "North"
+    ),
+
+    dcc.Graph(id="sales-graph", figure=fig)
+])
 
 # -------------------------
 # Callback
 # -------------------------
 @app.callback(
-    Output("sales-chart", "figure"),
-    Input("region-filter", "value")
+    Output("sales-graph", "figure"),
+    Input("region-picker", "value")
 )
-def update_chart(region):
-    filtered_df = df[df["product"] == "Pink Morsels"]
-
-    if region != "all":
-        filtered_df = filtered_df[filtered_df["region"] == region]
-
-    filtered_df = filtered_df.sort_values("date")
-
-    fig = px.line(
-        filtered_df,
-        x="date",
-        y="sales",
-        labels={
-            "date": "Date",
-            "sales": "Sales"
-        },
-        title="Pink Morsels Sales Over Time"
-    )
-
-    fig.add_vline(
-        x="2021-01-15",
-        line_dash="dash",
-        annotation_text="Price Increase",
-        annotation_position="top left"
-    )
-
+def update_graph(selected_region):
+    filtered_df = df[df["region"] == selected_region] if not df.empty else df
+    fig = px.bar(filtered_df, x="region", y="sales", title="Pink Morsels Sales")
     return fig
 
-
+# -------------------------
+# Run server
+# -------------------------
 if __name__ == "__main__":
     app.run_server(debug=True)
-

@@ -1,1 +1,6 @@
 Sales,Date,Region
+
+df = pd.read_csv("formatted_sales_data.csv")
+df["date"] = pd.to_datetime(df["date"])
+df = df[df["product"] == "Pink Morsels"]
+
